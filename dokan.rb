@@ -279,6 +279,7 @@ class Dokan
           if json['user'] and json['text']
             time = Time.parse( json['created_at'] ).strftime("%H:%M:%S")
             source = json['source'].gsub(/<[^>]+>/, '')
+            begin
             if json['retweeted_status']
               rtsource = json['retweeted_status']['source'].gsub(/<[^>]+>/, '')
               rttime = Time.parse( json['retweeted_status']['created_at'] )
@@ -288,14 +289,17 @@ class Dokan
               else 
                 timestr = rttime.strftime("%H:%M:%S")
               end
+              break if json['retweeted_status']['text'] =~ /shindanmaker\.com/
               puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{NKF::nkf('-s', source)}]"
               puts NKF::nkf('-s', unescape( json['retweeted_status']['text'] ))
               puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
             else
+              break if json['text'] =~ /shindanmaker\.com/
               puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{NKF::nkf('-s', source)}]"
               puts NKF::nkf('-s', unescape( json['text'] ))
             end
             puts "-" * 74
+            end
           elsif json['event'] == "list_member_removed"
             puts "** Removed from: #{json['target_object']['full_name']}"
             puts "-" * 74
