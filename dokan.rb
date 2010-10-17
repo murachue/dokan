@@ -20,6 +20,7 @@ require 'json'
 require 'readline'
 require 'hmac'
 require 'nkf'
+require 'highline/import'
 
 DOKAN_VERSION = "3.2"
 
@@ -64,7 +65,7 @@ class Dokan
   BITLY_API = "http://api.bit.ly/v3/shorten?"
   BITLY_LOGIN = "dokan"
   BITLY_KEY   = "R_885043b52ca063cc775c95acc9594a5e"
-  DOKAN_FILE = File.join( ENV['HOME'], ".dokanrc.db" )
+  DOKAN_FILE = "dokanrc.db"
 
   # new
   def initialize( opt )
@@ -163,7 +164,7 @@ class Dokan
     print "Enter the password for #{user}: "
     revertstty = `stty -g` rescue nil
     `stty -echo` rescue nil
-    pass = STDIN.gets.chomp.strip
+    pass = ask("") { |q| q.echo = "*" }.chomp.strip
     print "\n"
     `stty #{revertstty}` rescue nil  
 
@@ -287,12 +288,12 @@ class Dokan
               else 
                 timestr = rttime.strftime("%H:%M:%S")
               end
-              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{source}]"
-              puts unescape( json['retweeted_status']['text'] )
+              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{NKF::nkf('-s', source)}]"
+              puts NKF::nkf('-s', unescape( json['retweeted_status']['text'] ))
               puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
             else
-              puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{source}]"
-              puts unescape( json['text'] )
+              puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{NKF::nkf('-s', source)}]"
+              puts NKF::nkf('-s', unescape( json['text'] ))
             end
             puts "-" * 74
           elsif json['event'] == "list_member_removed"
@@ -301,8 +302,19 @@ class Dokan
           elsif json['event'] == "list_member_added"
             puts "** Added to: #{json['target_object']['full_name']}"
             puts "-" * 74
+          elsif json['event'] == nil	# when begin?
+            # do nothing
+          elsif json['event'] == 'favorite'
+            puts "** Favorite: by @#{NKF::nkf('-s', json['source']['screen_name'])}"
+            puts "#{NKF::nkf('-s', json['target_object']['text'])}"
+            puts "-" * 74
+          elsif json['event'] == 'unfavorite'
+            puts "** Unfavorite: by @#{NKF::nkf('-s', json['source']['screen_name'])}"
+            puts "#{NKF::nkf('-s', json['target_object']['text'])}"
+            puts "-" * 74
           else
             puts "** Unhandled event: #{json['event']}"
+            puts "#{json.inspect}"
             puts "-" * 74
           end
         end
