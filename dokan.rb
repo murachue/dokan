@@ -290,9 +290,9 @@ class Dokan
                 timestr = rttime.strftime("%H:%M:%S")
               end
               break if json['retweeted_status']['text'] =~ /shindanmaker\.com/
-              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{NKF::nkf('-s', source)}]"
+              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{NKF::nkf('-s', rtsource)}]"
               puts NKF::nkf('-s', unescape( json['retweeted_status']['text'] ))
-              puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
+              puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{NKF::nkf('-s', source)})"
             else
               break if json['text'] =~ /shindanmaker\.com/
               puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{NKF::nkf('-s', source)}]"
