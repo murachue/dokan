@@ -99,6 +99,19 @@ class Dokan
     end
   end
   
+# if Windows
+  def print *strs
+    strs.each do |s|
+      Kernel.print NKF::nkf('-s', s)
+    end
+  end
+  def puts *strs
+    strs.each do |s|
+      Kernel.puts NKF::nkf('-s', s)
+    end
+  end
+# endif
+
   def default( user = nil )
     @db.transaction do
       @db[:default_user] = user if user
@@ -290,13 +303,13 @@ class Dokan
                 timestr = rttime.strftime("%H:%M:%S")
               end
               break if json['retweeted_status']['text'] =~ /shindanmaker\.com/
-              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{NKF::nkf('-s', rtsource)}]"
-              puts NKF::nkf('-s', unescape( json['retweeted_status']['text'] ))
-              puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{NKF::nkf('-s', source)})"
+              puts "[@#{json['retweeted_status']['user']['screen_name']} at #{timestr} from #{rtsource}]"
+              puts unescape( json['retweeted_status']['text'] )
+              puts "   (RT by @#{json['user']['screen_name']} at #{time} from #{source})"
             else
               break if json['text'] =~ /shindanmaker\.com/
-              puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{NKF::nkf('-s', source)}]"
-              puts NKF::nkf('-s', unescape( json['text'] ))
+              puts "[@#{json['user']['screen_name']} at #{time.to_s} from #{source}]"
+              puts unescape( json['text'] )
             end
             puts "-" * 74
             end
@@ -309,12 +322,12 @@ class Dokan
           elsif json['event'] == nil	# when begin?
             # do nothing
           elsif json['event'] == 'favorite'
-            puts "** Favorite: by @#{NKF::nkf('-s', json['source']['screen_name'])}"
-            puts "#{NKF::nkf('-s', json['target_object']['text'])}"
+            puts "** Favorite: by @#{json['source']['screen_name']}"
+            puts "#{json['target_object']['text']}"
             puts "-" * 74
           elsif json['event'] == 'unfavorite'
-            puts "** Unfavorite: by @#{NKF::nkf('-s', json['source']['screen_name'])}"
-            puts "#{NKF::nkf('-s', json['target_object']['text'])}"
+            puts "** Unfavorite: by @#{json['source']['screen_name']}"
+            puts "#{json['target_object']['text']}"
             puts "-" * 74
           else
             puts "** Unhandled event: #{json['event']}"
